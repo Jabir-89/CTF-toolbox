@@ -52,9 +52,9 @@ def pcap_summary(path: Path) -> dict[str, object]:
 
     while offset + 16 <= len(raw):
         ts_sec, ts_frac, incl, orig = struct.unpack(endian + "IIII", raw[offset:offset + 16])
+        if offset + 16 + incl > len(raw):
+            break  # truncated capture: stop instead of reading past the end
         offset += 16 + incl
-        if incl > len(raw):
-            break
         ts = ts_sec + (ts_frac / 1e9 if resolution == "nanosecond" else ts_frac / 1e6)
         first_ts = ts if first_ts is None else min(first_ts, ts)
         last_ts = ts if last_ts is None else max(last_ts, ts)
