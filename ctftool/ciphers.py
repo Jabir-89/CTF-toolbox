@@ -34,6 +34,18 @@ RARE_BIGRAMS = {
     "fq", "qf", "vx", "xv", "jv", "vj", "gq", "qg", "hq", "qh", "zq", "qy",
 }
 
+# CTF flags are not English: `flag{ch41n_w0rks}` scores badly against letter
+# frequencies, so every Caesar shift of it looks equally wrong. A known flag
+# prefix is a much stronger signal than English-ness.
+FLAG_PREFIXES = ("flag{", "ctf{", "htb{", "picoctf{", "thm{", "ictf{")
+FLAG_BONUS = 3.0
+
+
+def flag_bonus(text: str) -> float:
+    """Bonus when the candidate looks like a CTF flag. 0.0 otherwise."""
+    lowered = text.lower()
+    return FLAG_BONUS if any(prefix in lowered for prefix in FLAG_PREFIXES) else 0.0
+
 
 def english_score(text: str) -> float:
     """Higher is more English-like.
@@ -61,7 +73,7 @@ def english_score(text: str) -> float:
         return base
     hits = sum(1 for i in range(pairs) if words[i:i + 2] in COMMON_BIGRAMS)
     misses = sum(1 for i in range(pairs) if words[i:i + 2] in RARE_BIGRAMS)
-    return base + 1.5 * (hits / pairs) - 1.5 * (misses / pairs)
+    return base + 1.5 * (hits / pairs) - 1.5 * (misses / pairs) + flag_bonus(text)
 
 
 # ---------------------------------------------------------------- caesar

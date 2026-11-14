@@ -23,16 +23,49 @@ No network calls, no telemetry, stdlib only for the core features.
 | File forensics | type by magic bytes, MD5/SHA1/SHA256, printable strings with byte offsets |
 | Captures | classic pcap summary without tshark, deauth/disassoc summary with it, WPA handshake → `.hc22000` |
 
+## Requirements
+
+| Need | Detail |
+|---|---|
+| **Python** | 3.9 or newer (`python --version`) |
+| **Third-party packages** | **none** — the core is stdlib only |
+| Optional: `tshark` | `pcap --deauth` frame analysis — `sudo apt install tshark` |
+| Optional: `hcxtools` | `wifi-hash` conversion — `sudo apt install hcxtools` |
+| Optional: `hashcat` | fast cracking in `crack` — `sudo apt install hashcat` |
+
+Missing optional tools never crash a command: it prints a one-line install hint
+and exits cleanly. Nothing here needs root, and nothing phones home.
+
 ## Install
 
 ```bash
 git clone https://github.com/Jabir-89/CTF-toolbox.git
-cd ctf-toolbox
-pip install -e .          # or: pipx install .
+cd CTF-toolbox
+pip install -e .
 ctftool --help
 ```
 
-Python 3.9+. No required third-party packages.
+Three other ways, depending on your setup:
+
+| Situation | Command |
+|---|---|
+| Just trying it, no install | `python -m ctftool --help` from the repo folder |
+| Keep it isolated | `pipx install .` |
+| Windows | `py -m ctftool --help` (or `ctftool` after `pip install -e .`) |
+
+## 60-second tour
+
+```bash
+ctftool decode "ZmxhZ3toZWxsb193b3JsZH0="        # [base64] flag{hello_world}
+ctftool caesar -b "Wkh txlfn eurzq ira"          # 25 shifts, best English first
+ctftool hashid 5d41402abc4b2a76b9719d911017c592  # md5, hashcat mode 0
+ctftool file suspicious.png                      # type + md5 / sha1 / sha256
+ctftool strings suspicious.png -n 6              # printable runs with offsets
+ctftool pcap capture.pcap                        # packets, duration, link type
+```
+
+Every command prints plain lines, so it composes with `grep`, `head`, and
+`xargs`. That is the whole design idea.
 
 ## Usage
 
@@ -98,7 +131,7 @@ It is also a learning project — every module is short enough to read end to en
 ## Project layout
 
 ```text
-ctf-toolbox/
+CTF-toolbox/
 ├── ctftool/
 │   ├── cli.py           # argparse subcommands
 │   ├── encodings.py     # base64, hex, morse, auto-detect
@@ -106,9 +139,14 @@ ctf-toolbox/
 │   ├── hashes.py        # identify + crack (hashlib / hashcat)
 │   ├── files.py         # magic bytes, digests, strings
 │   └── netforensics.py  # pcap parsing, deauth summary, WPA hash
+├── docs/
+│   └── HOW-IT-WORKS.md  # architecture, data flow, how to extend
 ├── tests/               # stdlib unittest, runs on 3.9–3.12
 └── .github/workflows/   # CI: tests + CLI smoke test on every push
 ```
+
+New to the codebase? Read [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) — it
+explains the design in five minutes, module by module.
 
 ## Development
 

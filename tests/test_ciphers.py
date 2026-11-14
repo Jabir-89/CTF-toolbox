@@ -89,6 +89,25 @@ class TestEnglishScore(unittest.TestCase):
     def test_empty(self):
         self.assertEqual(ciphers.english_score(""), float("-inf"))
 
+    def test_flag_bonus_detects_prefix(self):
+        self.assertGreater(ciphers.flag_bonus("flag{abc}"), 0)
+        self.assertGreater(ciphers.flag_bonus("HTB{abc}"), 0)
+        self.assertEqual(ciphers.flag_bonus("just text"), 0.0)
+
+    def test_flag_ranks_above_english_lookalike(self):
+        # A real flag scores worse on pure English than a shifted lookalike;
+        # the flag prefix bonus must put the real one first.
+        cipher = ciphers.caesar("flag{ch41n_w0rks}", 7)
+        shift, best, _ = ciphers.caesar_bruteforce(cipher)[0]
+        self.assertEqual(best, "flag{ch41n_w0rks}")
+
+
+class TestFlagInBruteforce(unittest.TestCase):
+    def test_xor_bruteforce_finds_flag(self):
+        cipher = ciphers.xor_single("flag{x0r_brut3}", 0x33)
+        key, best, _ = ciphers.xor_bruteforce(cipher)[0]
+        self.assertEqual(best, "flag{x0r_brut3}")
+
 
 if __name__ == "__main__":
     unittest.main()
