@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ctftool"
+version = "0.1.0"
+description = "Small, dependency-free helpers for CTF challenges, file forensics and capture analysis"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Jabir Hassan", email = "Jabir-89@gmail.com" }]
+keywords = ["ctf", "security", "forensics", "cryptography", "wifi", "capture", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Education",
+]
+
+[project.scripts]
+ctftool = "ctftool.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Jabir-89/CTF-toolbox"
+Issues = "https://github.com/Jabir-89/CTF-toolbox/issues"
+
+[tool.setuptools]
+packages = ["ctftool"]
