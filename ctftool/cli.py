@@ -47,7 +47,7 @@ def cmd_decode(args: argparse.Namespace) -> int:
         return 2
     except (ValueError, Exception) as exc:  # noqa: BLE001 - report, don't crash
         print(f"[!] {exc}", file=sys.stderr)
-        return 1
+        return 2
     return 0
 
 
@@ -108,7 +108,12 @@ def cmd_crack(args: argparse.Namespace) -> int:
         print(f"[!] wordlist not found: {wordlist}", file=sys.stderr)
         return 2
 
-    if args.engine == "python" or (args.engine == "auto" and not hashes.hashcat_available()):
+    use_python = args.engine == "python" or (args.engine == "auto" and not hashes.hashcat_available())
+    if use_python:
+        if hashes.python_algo(digest) is None:
+            print("[!] the python engine handles md5/sha1/sha2 hex digests only; "
+                  "use -e hashcat for this one", file=sys.stderr)
+            return 2
         plain = hashes.crack_python(digest, wordlist)
     else:
         try:
@@ -289,6 +294,11 @@ def main(argv: list[str] | None = None) -> int:
         return 130
     except BrokenPipeError:
         return 0
+    except (ValueError, KeyError, OSError) as exc:
+        # Bad input (empty key, one rail, invalid hex, unreadable file…) should be
+        # a one-line error, never a traceback.
+        print(f"[!] {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

@@ -28,9 +28,10 @@ class TestHexAndBinary(unittest.TestCase):
         self.assertEqual(encodings.hex_decode("68:69"), "hi")
         self.assertEqual(encodings.hex_decode("0x6869"), "hi")
 
-    def test_hex_odd_length_pads(self):
-        # "686" -> "0686": padded on the left, never raises
-        self.assertEqual(len(encodings.hex_decode("686")), 2)
+    def test_hex_odd_length_rejected(self):
+        # Silently padding corrupts the data; fail loudly instead.
+        with self.assertRaises(ValueError):
+            encodings.hex_decode("686")
 
     def test_hex_invalid(self):
         with self.assertRaises(ValueError):

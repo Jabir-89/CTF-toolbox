@@ -65,7 +65,7 @@ def hex_encode(text: str) -> str:
 def hex_decode(text: str) -> str:
     raw = text.strip().replace("0x", "").replace(" ", "").replace(":", "").replace("\n", "")
     if len(raw) % 2:
-        raw = "0" + raw
+        raise ValueError(f"odd number of hex digits ({len(raw)}) — expected pairs")
     try:
         return bytes.fromhex(raw).decode("utf-8", errors="replace")
     except ValueError as exc:

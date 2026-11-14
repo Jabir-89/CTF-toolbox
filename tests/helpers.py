@@ -1,7 +1,7 @@
 """Shared test helpers.
 
-Scratch files go into ``tests/.scratch`` instead of the system temp directory so
-the suite also runs inside restricted sandboxes that deny writes to temp paths.
+Scratch files live under ``tests/.scratch`` rather than the system temp
+directory, so the suite also runs inside restricted sandboxes.
 """
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ SCRATCH_ROOT = Path(__file__).resolve().parent / ".scratch"
 
 @contextmanager
 def scratch() -> Iterator[Path]:
-    """Yield an empty directory, then best-effort clean it up."""
     SCRATCH_ROOT.mkdir(exist_ok=True)
     workdir = SCRATCH_ROOT / uuid.uuid4().hex[:8]
     workdir.mkdir()

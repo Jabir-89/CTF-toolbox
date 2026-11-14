@@ -36,18 +36,26 @@ def identify(digest: str) -> list[tuple[str, int]]:
     return [(name, mode) for name, pattern, mode, _ in SIGNATURES if pattern.match(digest)]
 
 
-def _python_algo(digest: str) -> str | None:
-    """Pick a hashlib algorithm for a plain hex digest."""
+def python_algo(digest: str) -> str | None:
+    """Pick a hashlib algorithm for a plain hex digest (None if unsupported)."""
     if not re.fullmatch(r"[a-f0-9]+", digest.strip(), re.I):
         return None
     lengths = {32: "md5", 40: "sha1", 56: "sha224", 64: "sha256", 96: "sha384", 128: "sha512"}
     return lengths.get(len(digest.strip()))
 
 
-def crack_python(digest: str, wordlist: Path, max_candidates: int = 5_000_000) -> str | None:
-    """Compare against a wordlist using hashlib. Returns the plaintext or None."""
+_python_algo = python_algo  # backwards-compatible alias
+
+
+def crack_python(digest: str, wordlist: Path,
+                 max_candidates: int = 50_000_000) -> str | None:
+    """Compare against a wordlist using hashlib. Returns the plaintext or None.
+
+    ``max_candidates`` guards against accidentally pointing at a multi-gigabyte
+    file. The default (50M) covers rockyou.txt (~14M lines) with room to spare.
+    """
     digest = digest.strip().lower()
-    algo = _python_algo(digest)
+    algo = python_algo(digest)
     if algo is None:
         return None
     if not wordlist.is_file():
@@ -87,10 +95,15 @@ def hashcat_crack(digest: str, wordlist: Path, mode: int | None = None,
     """Run hashcat --show afterwards and return the plaintext, if any."""
     if not hashcat_available():
         raise RuntimeError("hashcat not installed")
-    cmd = hashcat_command(digest, wordlist, mode, rules)
+    resolved = mode
+    if resolved is None:
+        guesses = identify(digest)
+        resolved = guesses[0][1] if guesses else 0
+
+    cmd = hashcat_command(digest, wordlist, resolved, rules)
     subprocess.run(cmd, check=False, capture_output=True, text=True)
     show = subprocess.run(
-        ["hashcat", "-m", str(mode if mode is not None else 0), digest.strip(), "--show",
+        ["hashcat", "-m", str(resolved), digest.strip(), "--show",
          "--potfile-path", "ctftool.pot", "--quiet"],
         check=False, capture_output=True, text=True,
     )
