@@ -5,7 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__, ciphers, encodings, files, hashes, netforensics
+from . import __version__, ciphers, encodings, files, hashes, netforensics, solver
 
 
 def _read_text(values: list[str]) -> str:
@@ -129,6 +129,19 @@ def cmd_crack(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_solve(args: argparse.Namespace) -> int:
+    text = _read_text(args.text)
+    data = text.encode("utf-8", "surrogateescape")
+    results = solver.solve(data, max_depth=args.depth, top=args.top)
+    if not results:
+        print("[-] no chain produced readable text")
+        return 1
+    for rank, (score, chain, out) in enumerate(results, 1):
+        print(f"[{rank}] {score:7.3f}  {out}")
+        print(f"    chain: {chain}")
+    return 0
+
+
 def cmd_strings(args: argparse.Namespace) -> int:
     path = Path(args.file).expanduser()
     if not path.is_file():
@@ -217,6 +230,13 @@ def build_parser() -> argparse.ArgumentParser:
     dec.add_argument("-f", "--format", default="auto",
                      choices=["auto"] + sorted(encodings.DECODER_MAP))
     dec.set_defaults(func=cmd_decode)
+
+    sol = sub.add_parser("solve", help="search decoder/cipher chains for a flag")
+    sol.add_argument("text", nargs="+", help="the encoded text, or '-' for stdin")
+    sol.add_argument("-d", "--depth", type=int, default=3,
+                     help="how many decoding layers to try (default 3)")
+    sol.add_argument("-t", "--top", type=int, default=5, help="how many candidates to show")
+    sol.set_defaults(func=cmd_solve)
 
     cae = sub.add_parser("caesar", help="Caesar shift, or brute-force all 25")
     cae.add_argument("text", nargs="+")

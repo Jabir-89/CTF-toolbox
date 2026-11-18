@@ -18,6 +18,7 @@ No network calls, no telemetry, stdlib only for the core features.
 | Area | What you get |
 |---|---|
 | Encodings | base64 / base32 / hex / binary / URL / Morse / ROT13 / reverse, encode + decode, and `auto` mode that tries all of them |
+| **Chain solver** | `solve` tries decoder/cipher combinations (base64 -> hex -> XOR -> Caesar) and ranks what falls out |
 | Classical ciphers | Caesar (with brute force), Atbash, Vigenère, rail fence, single-byte XOR (with key brute force) |
 | Hashes | identify a dozen formats by shape, crack against a wordlist with `hashlib` or `hashcat` |
 | File forensics | type by magic bytes, MD5/SHA1/SHA256, printable strings with byte offsets |
@@ -56,6 +57,7 @@ Three other ways, depending on your setup:
 ## 60-second tour
 
 ```bash
+ctftool solve "ZmxhZ3toZWxsb193b3JsZH0="          # chain solver: flag{hello_world}
 ctftool decode "ZmxhZ3toZWxsb193b3JsZH0="        # [base64] flag{hello_world}
 ctftool caesar -b "Wkh txlfn eurzq ira"          # 25 shifts, best English first
 ctftool hashid 5d41402abc4b2a76b9719d911017c592  # md5, hashcat mode 0
@@ -80,6 +82,33 @@ ctftool encode -f binary "A"              # 01000001
 ctftool encode -f morse "SOS"             # ... --- ...
 echo "ZmxhZ3thYmN9" | ctftool decode -
 ```
+
+### Chain solver
+
+The command that does the tedious part for you: it tries combinations of
+decoders and ciphers and ranks whatever comes out.
+
+```bash
+ctftool solve "ZmxhZ3toZWxsb193b3JsZH0="
+```
+
+```text
+[1]   2.759  flag{hello_world}
+    chain: base64
+[2]  -2.816  qalpyoraahU}heasw
+    chain: base64 -> rot13 -> xor 0x17 -> caesar 13
+```
+
+`ash
+ctftool solve "<hex blob>" -t 3        # show 3 candidates
+ctftool solve "<blob>" --depth 4       # allow 4 layers (slower)
+cat challenge.txt | ctftool solve -    # from a file
+`
+
+It searches structural decoders (base64, base32, hex, URL, binary, rot13,
+reverse) up to `--depth` layers, then applies Caesar (25 shifts) and
+single-byte XOR (256 keys), including XOR followed by Caesar. Bounded on
+purpose: it will not find transpositions or keyed ciphers.
 
 ### Ciphers
 
@@ -137,6 +166,7 @@ CTF-toolbox/
 │   ├── encodings.py     # base64, hex, morse, auto-detect
 │   ├── ciphers.py       # caesar, vigenere, rail fence, xor + scoring
 │   ├── hashes.py        # identify + crack (hashlib / hashcat)
+solver.py        # solve: decoder/cipher chain search
 │   ├── files.py         # magic bytes, digests, strings
 │   └── netforensics.py  # pcap parsing, deauth summary, WPA hash
 ├── docs/

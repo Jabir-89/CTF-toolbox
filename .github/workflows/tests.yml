@@ -34,3 +34,4 @@ jobs:
           ctftool encode -f base64 "flag{ci_works}"
           ctftool decode -f base64 "ZmxhZ3tjaV93b3Jrc30="
           ctftool hashid 5d41402abc4b2a76b9719d911017c592
+          ctftool solve "ZmxhZ3toaX0="

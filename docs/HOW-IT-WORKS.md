@@ -95,6 +95,20 @@ directly — magic bytes give endianness, `network` gives the link type. That me
 packet counts and duration work without tshark installed. Frame-level analysis
 (deauth, disassoc) needs tshark, so it is opt-in via `--deauth`.
 
+
+### solver.py
+
+The chain solver behind ctftool solve. It explores structural decoders
+(base64, base32, hex, URL, binary, rot13, reverse) breadth-first up to
+--depth layers, de-duplicating byte results, then applies the expensive
+transforms as terminals: 25 Caesar shifts and 256 single-byte XOR keys, plus
+Caesar on top of any XOR result that reads like text.
+
+It is deliberately bounded — MAX_NODES caps the breadth-first explosion and
+MAX_SECONDS cuts the ranking phase short — so a hostile input cannot hang the
+CLI. Scoring reuses english_score + lag_bonus, which is why a candidate
+containing lag{...} jumps to the top even when its English score is poor.
+
 ## Testing
 
 ```bash
