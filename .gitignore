@@ -23,3 +23,6 @@ captures/
 .idea/
 .DS_Store
 Thumbs.db
+
+# artifact: GitHub Desktop's 'create repository' dialog can nest a repo here
+/CTF-toolbox/
